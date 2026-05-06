@@ -5,18 +5,15 @@ VERIFY_TOKEN = "myshopbot123"
 
 BUSINESS_INFO = """
 You are a friendly customer service assistant for Art of Apparel Co, a luxury streetwear brand based in Hyderabad.
-
-About us: We sell premium quality custom printed apparel including t-shirts, hoodies, and accessories. We offer bulk printing for businesses and retail for individuals.
-
+We sell premium quality custom printed apparel including t-shirts, hoodies, and accessories.
+We offer bulk printing for businesses and retail for individuals.
 Working hours: Monday to Saturday, 10am to 7pm IST
 Location: Hyderabad, India
-
 Rules:
 - Always reply in the same language the customer uses
 - Be friendly, warm and professional
-- If asked about pricing, say prices depend on quantity and design and ask them to share requirements
-- If you cannot answer something, say: I will get back to you shortly with more details
-- Never make up information
+- If asked about pricing, say prices depend on quantity and design
+- If you cannot answer, say: I will get back to you shortly
 """
 
 import os
@@ -45,7 +42,7 @@ def get_claude_reply(customer_message):
 
 def send_instagram_message(recipient_id, message_text):
     try:
-        url = "https://graph.facebook.com/v18.0/me/messages"
+        url = f"https://graph.facebook.com/v18.0/{INSTAGRAM_ACCOUNT_ID}/messages"
         payload = {
             "recipient": {"id": recipient_id},
             "message": {"text": message_text},
@@ -56,40 +53,39 @@ def send_instagram_message(recipient_id, message_text):
     except Exception as e:
         print(f"Send error: {e}")
 
-def check_new_messages():
+def check_messages():
     while True:
         try:
-            url = f"https://graph.facebook.com/v18.0/{INSTAGRAM_ACCOUNT_ID}/conversations"
+            url = f"https://graph.facebook.com/v18.0/{INSTAGRAM_ACCOUNT_ID}/messages"
             params = {
-                "fields": "messages{message,from,created_time}",
+                "fields": "id,message,from,created_time",
                 "access_token": INSTAGRAM_TOKEN
             }
             r = requests.get(url, params=params)
+            print(f"Checking: {r.status_code}")
             data = r.json()
-            print(f"Checking messages: {r.status_code}")
 
             if "data" in data:
-                for conv in data["data"]:
-                    if "messages" in conv and "data" in conv["messages"]:
-                        messages = conv["messages"]["data"]
-                        if messages:
-                            latest = messages[0]
-                            msg_id = latest.get("id")
-                            msg_text = latest.get("message", "")
-                            sender_id = latest.get("from", {}).get("id")
+                for msg in data["data"]:
+                    msg_id = msg.get("id", "")
+                    msg_text = msg.get("message", "")
+                    sender = msg.get("from", {})
+                    sender_id = sender.get("id", "")
 
-                            if (msg_id not in replied_messages and
-                                sender_id and
-                                sender_id != INSTAGRAM_ACCOUNT_ID and
-                                msg_text):
-                                print(f"New message from {sender_id}: {msg_text}")
-                                reply = get_claude_reply(msg_text)
-                                send_instagram_message(sender_id, reply)
-                                replied_messages.add(msg_id)
-                                print(f"Replied: {reply}")
+                    if (msg_id and
+                        msg_id not in replied_messages and
+                        sender_id != INSTAGRAM_ACCOUNT_ID and
+                        msg_text):
+                        print(f"New msg from {sender_id}: {msg_text}")
+                        reply = get_claude_reply(msg_text)
+                        send_instagram_message(sender_id, reply)
+                        replied_messages.add(msg_id)
+                        print(f"Replied: {reply[:50]}")
+            else:
+                print(f"Response: {data}")
 
         except Exception as e:
-            print(f"Check error: {e}")
+            print(f"Error: {e}")
 
         time.sleep(30)
 
@@ -113,7 +109,7 @@ def handle_message():
                     customer_text = event["message"]["text"]
                     msg_id = event["message"].get("mid", "")
                     if msg_id not in replied_messages:
-                        print(f"Webhook received: {customer_text}")
+                        print(f"Webhook msg: {customer_text}")
                         ai_reply = get_claude_reply(customer_text)
                         send_instagram_message(sender_id, ai_reply)
                         replied_messages.add(msg_id)
@@ -125,7 +121,7 @@ def handle_message():
 def home():
     return "Art of Apparel Bot is running!"
 
-threading.Thread(target=check_new_messages, daemon=True).start()
+threading.Thread(target=check_messages, daemon=True).start()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
