@@ -1,5 +1,5 @@
 CLAUDE_API_KEY = "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"        # paste your Claude API key here
-INSTAGRAM_TOKEN = "IGAATvr1XptdhBZAGI4YS1YMmhDazgyOHdyUTZAHcWlKMWZAhRGJDNUk4SC05bXQyVnlzX3R3bEdOdXlLZAl9lZA2tDTFI3aUlQVWtVUlRiNGtYdHBTZAFBiRzBfMnNoQlRTQzNVY1lBbjE4M3BDSkJTd3RIa1BiZAGJhUmpLX3ZAKS3IxdwZDZD"    # paste your Access Token here
+INSTAGRAM_TOKEN = "IGAATvr1XptdhBZAFlrdjJPUHdQZAm42RGVuNDBMMkhFOG5qM1FBU0VReU1xTDN0ZAVdwdkxybXRmZAE8wZA0tpVzl2el8zT0daOTZATakhLRWtPSEhYbXdrSUstelI3bWZAISjlwMXJFeGpJdDI0cDFCVW51X2d1NUtLblA5S0Rub2dWSQZDZD"    # paste your Access Token here
 VERIFY_TOKEN = "myshopbot123"        # leave this exactly as written
 
 BUSINESS_INFO = """
